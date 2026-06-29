@@ -70,7 +70,7 @@
       ansible.builtin.lineinfile:
         path: /etc/rsyslog.conf
         insertafter: EOF
-        line: "*.* @{{ hostvars['ServerA']['ansible_host'] }}:514"
+        line: "*.* @192.168.211.130:514"
       notify: Restart rsyslog Managed
 
   handlers:
