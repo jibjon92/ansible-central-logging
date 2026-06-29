@@ -1,0 +1,79 @@
+---
+- name: Configure ServerA as Central Rsyslog Server (RHEL 9)
+  hosts: ServerA
+  become: true
+  tasks:
+    - name: Verify rsyslog package existence on Central Server
+      ansible.builtin.shell: |
+        if ! rpm -q rsyslog; then
+          dnf install -y rsyslog --disablerepo=* --enablerepo=local* || echo "Proceeding with base configuration"
+        fi
+      register: server_rpm_check
+      changed_when: false
+
+    - name: Configure rsyslog to receive logs
+      ansible.builtin.lineinfile:
+        path: /etc/rsyslog.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#module\(load="imudp"\)', line: 'module(load="imudp")' }
+        - { regexp: '^#input\(type="imudp"', line: 'input(type="imudp" port="514")' }
+      notify: Restart rsyslog Server
+
+    - name: Create template for storing remote logs by hostname
+      ansible.builtin.blockinfile:
+        path: /etc/rsyslog.conf
+        insertafter: EOF
+        block: |
+          $template RemoteLogs,"/var/log/remote/%HOSTNAME%/%PROGRAMNAME%.log"
+          *.* ?RemoteLogs
+          & stop
+      notify: Restart rsyslog Server
+
+    - name: Allow Rsyslog UDP port 514 in Firewalld
+      ansible.posix.firewalld:
+        port: 514/udp
+        permanent: true
+        state: enabled
+        immediate: true
+      ignore_errors: true
+
+    - name: Ensure SELinux allows rsyslog to write to custom paths
+      ansible.builtin.seboolean:
+        name: nis_enabled
+        state: true
+        persistent: true
+      ignore_errors: true
+
+  handlers:
+    - name: Restart rsyslog Server
+      ansible.builtin.service:
+        name: rsyslog
+        state: restarted
+
+- name: Configure Managed Clients to Forward Logs to ServerA
+  hosts: all:!ServerA
+  become: true
+  tasks:
+    - name: Verify rsyslog package existence on client hosts
+      ansible.builtin.shell: |
+        if ! rpm -q rsyslog; then
+          dnf install -y rsyslog --disablerepo=* --enablerepo=local* || echo "Proceeding with base configuration"
+        fi
+      register: client_rpm_check
+      changed_when: false
+
+    - name: Configure log forwarding to ServerA
+      ansible.builtin.lineinfile:
+        path: /etc/rsyslog.conf
+        insertafter: EOF
+        line: "*.* @192.168.211.130:514"
+      notify: Restart rsyslog Managed
+
+  handlers:
+    - name: Restart rsyslog Managed
+      ansible.builtin.service:
+        name: rsyslog
+        state: restarted
