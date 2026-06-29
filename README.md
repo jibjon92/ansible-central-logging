@@ -7,6 +7,6 @@ Rather than managing decoupled log endpoints across an enterprise footprint, thi
 
 ## 📁 Project Directory Layout
 ansible-central-logging/
-├── rsyslog_server.yml     # Core automation orchestrator (Hub & Client configurations)
-├── inventory.ini          # Environmental node layout mapping target system IPs
-└── images/                # Visual validation and architecture blueprints
+1. rsyslog_server.yml     # Core automation orchestrator (Hub & Client configurations)
+2. inventory.ini          # Environmental node layout mapping target system IPs
+3. images/                # Visual validation and architecture blueprints
