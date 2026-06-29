@@ -25,6 +25,7 @@
     - name: Create template for storing remote logs by hostname
       ansible.builtin.blockinfile:
         path: /etc/rsyslog.conf
+        create: true
         insertafter: EOF
         block: |
           $template RemoteLogs,"/var/log/remote/%HOSTNAME%/%PROGRAMNAME%.log"
@@ -69,7 +70,7 @@
       ansible.builtin.lineinfile:
         path: /etc/rsyslog.conf
         insertafter: EOF
-        line: "*.* @192.168.211.130:514"
+        line: "*.* @{{ hostvars['ServerA']['ansible_host'] }}:514"
       notify: Restart rsyslog Managed
 
   handlers:
