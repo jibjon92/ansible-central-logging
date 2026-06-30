@@ -9,4 +9,5 @@ Rather than managing decoupled log endpoints across an enterprise footprint, thi
 ansible-central-logging/
 1. rsyslog_server.yml                           # Core automation orchestrator (Hub & Client configurations)
 2. inventory.ini                                # Environmental node layout mapping target system IPs
-3. images/                                      # Visual validation and architecture blueprints
+3. logrotation.yml                              # Log rotation after 7 days
+4. images/                                      # Visual validation and architecture blueprints
