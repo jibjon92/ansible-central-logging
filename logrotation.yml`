@@ -1,0 +1,17 @@
+- name: Configure Logrotate for custom remote logs
+      ansible.builtin.blockinfile:
+        path: /etc/logrotate.d/remote_logs
+        create: true # Tells Ansible to create this file if it doesn't exist
+        mode: '0644'
+        block: |
+          /var/log/remote/*/*.log {
+              daily
+              rotate 7
+              compress
+              missingok
+              notifempty
+              sharedscripts
+              postrotate
+                  /usr/bin/systemctl reload rsyslog > /dev/null 2>&1 || true
+              endscript
+          }
